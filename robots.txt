@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ng-decor-and-projects.vercel.app/sitemap.xml
