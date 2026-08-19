@@ -1,0 +1,44 @@
+name: SEO automation
+
+# Daily: run an SEO checklist against the live site and keep ONE GitHub issue
+# updated with the score + top suggestions.
+# Weekly (Mondays): run a full Lighthouse audit (SEO / performance / a11y).
+# You can also run it any time from the Actions tab ("Run workflow").
+
+on:
+  schedule:
+    - cron: "0 6 * * *"   # every day 06:00 UTC (08:00 SAST): SEO checklist
+    - cron: "0 7 * * 1"   # Mondays 07:00 UTC: Lighthouse audit
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  seo-checklist:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 6 * * *'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run SEO checklist and update issue
+        env:
+          SITE_URL: https://ng-decor-and-projects.vercel.app
+          SITE_NAME: NG Decor & Projects
+          REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node .github/scripts/seo-check.mjs
+
+  lighthouse:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '0 7 * * 1'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lighthouse audit (SEO / performance / accessibility)
+        uses: treosh/lighthouse-ci-action@v12
+        with:
+          urls: https://ng-decor-and-projects.vercel.app
+          uploadArtifacts: true
+          temporaryPublicStorage: true
